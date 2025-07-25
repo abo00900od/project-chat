@@ -1,6 +1,8 @@
-import CONFIG from './config';
-import Vue from 'vue';
-export default Vue.component('suggestions', {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var config_1 = require("./config");
+var vue_1 = require("vue");
+exports.default = vue_1.default.component('suggestions', {
     props: {
         message: {
             type: String
@@ -9,19 +11,20 @@ export default Vue.component('suggestions', {
             type: Array
         }
     },
-    data() {
+    data: function () {
         return {};
     },
     computed: {
-        currentSuggestions() {
+        currentSuggestions: function () {
+            var _this = this;
             if (this.message === '') {
                 return [];
             }
-            const currentSuggestions = this.suggestions.filter((s) => {
-                if (!s.name.startsWith(this.message)) {
-                    const suggestionSplitted = s.name.split(' ');
-                    const messageSplitted = this.message.split(' ');
-                    for (let i = 0; i < messageSplitted.length; i += 1) {
+            var currentSuggestions = this.suggestions.filter(function (s) {
+                if (!s.name.startsWith(_this.message)) {
+                    var suggestionSplitted = s.name.split(' ');
+                    var messageSplitted = _this.message.split(' ');
+                    for (var i = 0; i < messageSplitted.length; i += 1) {
                         if (i >= suggestionSplitted.length) {
                             return i < suggestionSplitted.length + s.params.length;
                         }
@@ -31,16 +34,16 @@ export default Vue.component('suggestions', {
                     }
                 }
                 return true;
-            }).slice(0, CONFIG.suggestionLimit);
-            currentSuggestions.forEach((s) => {
+            }).slice(0, config_1.default.suggestionLimit);
+            currentSuggestions.forEach(function (s) {
                 // eslint-disable-next-line no-param-reassign
-                s.disabled = !s.name.startsWith(this.message);
-                s.params.forEach((p, index) => {
-                    const wType = (index === s.params.length - 1) ? '.' : '\\S';
-                    const regex = new RegExp(`${s.name} (?:\\w+ ){${index}}(?:${wType}*)$`, 'g');
+                s.disabled = !s.name.startsWith(_this.message);
+                s.params.forEach(function (p, index) {
+                    var wType = (index === s.params.length - 1) ? '.' : '\\S';
+                    var regex = new RegExp("".concat(s.name, " (?:\\w+ ){").concat(index, "}(?:").concat(wType, "*)$"), 'g');
                     // eslint-disable-next-line no-param-reassign
                     // @ts-ignore
-                    p.disabled = this.message.match(regex) == null;
+                    p.disabled = _this.message.match(regex) == null;
                 });
             });
             return currentSuggestions;

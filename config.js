@@ -1,4 +1,4 @@
-export default {
+var CONFIG = {
     defaultTemplateId: 'default',
     defaultAltTemplateId: 'defaultAlt',
     templates: {
@@ -15,3 +15,4 @@ export default {
         height: '22%',
     }
 };
+window['CONFIG'] = CONFIG;

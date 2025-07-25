@@ -1,4 +1,4 @@
-export default {
+const CONFIG = {
   defaultTemplateId: 'default', //This is the default template for 2 args1
   defaultAltTemplateId: 'defaultAlt', //This one for 1 arg
   templates: { //You can add static templates here
@@ -15,3 +15,5 @@ export default {
     height: '22%',
   }
 };
+
+(window as any)['CONFIG'] = CONFIG;

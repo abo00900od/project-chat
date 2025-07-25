@@ -1,4 +1,4 @@
-export function post(url: string, data: any) {
+function post(url: string, data: any) {
     var request = new XMLHttpRequest();
     request.open('POST', url, true);
     request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
@@ -16,6 +16,7 @@ function emulate(type: string, detail = {}) {
     }));
 }
 
+(window as any)['post'] = post;
 (window as any)['emulate'] = emulate;
 
 (window as any)['demo'] = () => {
