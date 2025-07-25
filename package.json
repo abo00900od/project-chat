@@ -1,0 +1,17 @@
+{
+  "name": "project-chat",
+  "version": "1.0.0",
+  "description": "Chat interface project",
+  "main": "main.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "python3 -m http.server 8000"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.5",
+    "@types/node": "^18.15.0"
+  },
+  "dependencies": {
+    "vue": "^2.7.14"
+  }
+}
