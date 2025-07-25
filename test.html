@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Modern Chat Interface</title>
+  <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+  <link href="latofonts.css" rel="stylesheet">
+  <link href="flexboxgrid.6.3.1.min.css" rel="stylesheet">
+  <link href="animate.3.5.2.min.css" rel="stylesheet">
+  <link href="index.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="chat-window" style="opacity: 1; position: relative; top: 0; left: 0; width: 100%; height: 400px;">
+      <div class="chat-messages">
+        <div class="msg">
+          <span><span class="color-0"><b>System</b>: Welcome to the enhanced chat interface! 🎉</span></span>
+        </div>
+        <div class="msg">
+          <span><span class="color-2"><b>Ahmed</b>: This new design looks amazing!</span></span>
+        </div>
+        <div class="msg">
+          <span><span class="color-4"><b>Sara</b>: I love the modern gradients and smooth animations.</span></span>
+        </div>
+        <div class="msg">
+          <span><span class="color-3"><b>Ali</b>: The color scheme is much better now.</span></span>
+        </div>
+        <div class="msg multiline">
+          <span><span class="color-6"><b>Fatima</b>: This is a multiline message example.
+It shows how longer messages are displayed
+with proper formatting and spacing.</span></span>
+        </div>
+        <div class="msg">
+          <span><span class="color-1"><b>Omar</b>: Perfect! Ready for production. ✨</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="chat-input" style="position: relative; top: 20px; left: 0; width: 100%;">
+      <div class="input">
+        <span class="prefix" style="color: #fff">💬</span>
+        <textarea rows="1" placeholder="اكتب رسالتك هنا... Type your message here..."></textarea>
+      </div>
+      <div class="suggestions-wrap">
+        <ul class="suggestions">
+          <li class="suggestion">
+            <p><span>/help</span><span class="param">[command]</span></p>
+            <small class="help">احصل على مساعدة لأمر معين - Get help for a specific command</small>
+          </li>
+          <li class="suggestion">
+            <p><span>/clear</span></p>
+            <small class="help">مسح تاريخ المحادثة - Clear the chat history</small>
+          </li>
+          <li class="suggestion">
+            <p><span>/user</span><span class="param">[name]</span></p>
+            <small class="help">عرض معلومات المستخدم - Show user information</small>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

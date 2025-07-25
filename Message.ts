@@ -36,6 +36,13 @@ export default Vue.component('message', {
     },
   },
   methods: {
+    onMessageClick() {
+      // Add subtle interaction feedback
+      this.$el.style.transform = 'scale(0.98)';
+      setTimeout(() => {
+        this.$el.style.transform = 'scale(1)';
+      }, 100);
+    },
     colorizeOld(str: string): string {
       return `<span style="color: rgb(${this.color[0]}, ${this.color[1]}, ${this.color[2]})">${str}</span>`
     },

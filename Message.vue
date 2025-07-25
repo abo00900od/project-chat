@@ -1,5 +1,5 @@
 <template>
-    <div class="msg" :class="{ multiline }">
+    <div class="msg" :class="{ multiline }" @click="onMessageClick">
       <span v-html="textEscaped"></span>
     </div>
 </template>

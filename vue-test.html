@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Vue Chat Interface - Enhanced</title>
+  <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+  <link href="latofonts.css" rel="stylesheet">
+  <link href="flexboxgrid.6.3.1.min.css" rel="stylesheet">
+  <link href="animate.3.5.2.min.css" rel="stylesheet">
+  <link href="index.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      font-family: 'Lato', sans-serif;
+    }
+    
+    .demo-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .demo-title {
+      color: white;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2.5rem;
+      font-weight: 300;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <h1 class="demo-title">Enhanced Chat Interface</h1>
+    <div id="app"></div>
+  </div>
+
+  <!-- Message Component Template -->
+  <script type="text/x-template" id="message-template">
+    <div class="msg" :class="{ multiline }" @click="onMessageClick">
+      <span v-html="textEscaped"></span>
+    </div>
+  </script>
+
+  <!-- Suggestions Component Template -->
+  <script type="text/x-template" id="suggestions-template">
+    <div class="suggestions-wrap" v-show="currentSuggestions.length > 0">
+        <ul class="suggestions">
+        <li class="suggestion" 
+            v-for="s in currentSuggestions" 
+            :key="s.name"
+            @click="onSuggestionClick(s)"
+            @mouseenter="onSuggestionHover(s)">
+            <p>
+            <span :class="{ 'disabled': s.disabled }">
+                {{s.name}}
+            </span>
+            <span class="param"
+                    v-for="p in s.params"
+                    :class="{ 'disabled': p.disabled }"
+                    :key="p.name">
+                [{{p.name}}]
+            </span>
+            </p>
+            <small class="help">
+            <template v-if="!s.disabled">
+                {{s.help}}
+            </template>
+            <template v-for="p in s.params" v-if="!p.disabled">
+                {{p.help}}
+            </template>
+            </small>
+        </li>
+        </ul>
+    </div>
+  </script>
+
+  <!-- App Component Template -->
+  <script type="text/x-template" id="app-template">
+    <div id="app">
+      <div class="chat-window" :class="{
+          'animated': !showWindow && hideAnimated,
+          'hidden': !showWindow
+        }">
+        <div class="chat-messages" ref="messages">
+          <message-component v-for="msg in messages"
+                   :args="msg.args"
+                   :template="msg.template"
+                   :multiline="msg.multiline"
+                   :key="msg.id">
+          </message-component>
+        </div>
+      </div>
+      <div class="chat-input">
+        <div v-show="showInput" class="input">
+          <span class="prefix">💬</span>
+          <textarea v-model="message"
+                    ref="input"
+                    type="text"
+                    autofocus
+                    spellcheck="false"
+                    rows="1"
+                    placeholder="اكتب رسالتك هنا... | Type your message here..."
+                    @keyup="keyUp"
+                    @keydown="keyDown"
+                    @keypress.enter.prevent="send">
+          </textarea>
+        </div>
+        <suggestions-component :message="message" :suggestions="suggestions">
+        </suggestions-component>
+      </div>
+    </div>
+  </script>
+
+  <script>
+    // Message Component
+    Vue.component('message-component', {
+      template: '#message-template',
+      props: {
+        args: Array,
+        template: String,
+        multiline: Boolean
+      },
+      computed: {
+        textEscaped() {
+          const template = this.template || '<b>{0}</b>: {1}';
+          let s = template.replace(/{(\d+)}/g, (match, number) => {
+            return this.args[number] != undefined ? this.escape(this.args[number]) : match;
+          });
+          return this.colorize(s);
+        }
+      },
+      methods: {
+        onMessageClick() {
+          this.$el.style.transform = 'scale(0.98)';
+          setTimeout(() => {
+            this.$el.style.transform = 'scale(1)';
+          }, 100);
+        },
+        colorize(str) {
+          let s = "<span>" + this.colorTrans(str) + "</span>";
+          return s.replace(/<span[^>]*><\/span[^>]*>/g, '');
+        },
+        colorTrans(str) {
+          return str
+            .replace(/\^([0-9])/g, (str, color) => `</span><span class="color-${color}">`)
+            .replace(/\^#([0-9A-F]{3,6})/gi, (str, color) => `</span><span class="color" style="color: #${color}">`)
+            .replace(/~([a-z])~/g, (str, color) => `</span><span class="gameColor-${color}">`);
+        },
+        escape(unsafe) {
+          return String(unsafe)
+           .replace(/&/g, '&amp;')
+           .replace(/</g, '&lt;')
+           .replace(/>/g, '&gt;')
+           .replace(/"/g, '&quot;')
+           .replace(/'/g, '&#039;');
+        }
+      }
+    });
+
+    // Suggestions Component
+    Vue.component('suggestions-component', {
+      template: '#suggestions-template',
+      props: {
+        message: String,
+        suggestions: Array
+      },
+      computed: {
+        currentSuggestions() {
+          if (this.message === '') return [];
+          return this.suggestions.filter(s => s.name.toLowerCase().includes(this.message.toLowerCase())).slice(0, 5);
+        }
+      },
+      methods: {
+        onSuggestionClick(suggestion) {
+          this.$emit('suggestion-selected', suggestion);
+        },
+        onSuggestionHover(suggestion) {
+          console.log('Hovered:', suggestion.name);
+        }
+      }
+    });
+
+    // Main App
+    new Vue({
+      el: '#app',
+      template: '#app-template',
+      data: {
+        showInput: true,
+        showWindow: true,
+        hideAnimated: true,
+        message: '',
+        messages: [
+          {
+            id: 1,
+            args: ['System', 'Welcome to the enhanced chat interface! 🎉'],
+            template: '^0<b>{0}</b>: {1}',
+            multiline: false
+          },
+          {
+            id: 2,
+            args: ['Ahmed', 'This new design looks amazing!'],
+            template: '^2<b>{0}</b>: {1}',
+            multiline: false
+          },
+          {
+            id: 3,
+            args: ['Sara', 'I love the modern gradients and smooth animations.'],
+            template: '^4<b>{0}</b>: {1}',
+            multiline: false
+          },
+          {
+            id: 4,
+            args: ['Ali', 'The color scheme is much better now.'],
+            template: '^3<b>{0}</b>: {1}',
+            multiline: false
+          },
+          {
+            id: 5,
+            args: ['Fatima', 'This is a multiline message example.\nIt shows how longer messages are displayed\nwith proper formatting and spacing.'],
+            template: '^6<b>{0}</b>: {1}',
+            multiline: true
+          },
+          {
+            id: 6,
+            args: ['Omar', 'Perfect! Ready for production. ✨'],
+            template: '^1<b>{0}</b>: {1}',
+            multiline: false
+          }
+        ],
+        suggestions: [
+          {
+            name: '/help',
+            help: 'احصل على مساعدة لأمر معين - Get help for a specific command',
+            params: [{name: 'command', disabled: false}],
+            disabled: false
+          },
+          {
+            name: '/clear',
+            help: 'مسح تاريخ المحادثة - Clear the chat history',
+            params: [],
+            disabled: false
+          },
+          {
+            name: '/user',
+            help: 'عرض معلومات المستخدم - Show user information',
+            params: [{name: 'name', disabled: false}],
+            disabled: false
+          },
+          {
+            name: '/ban',
+            help: 'حظر مستخدم - Ban a user',
+            params: [{name: 'player', disabled: false}],
+            disabled: false
+          }
+        ]
+      },
+      methods: {
+        keyUp() {
+          this.resize();
+        },
+        keyDown(e) {
+          this.resize();
+        },
+        resize() {
+          const input = this.$refs.input;
+          if (input) {
+            const style = getComputedStyle(input);
+            const paddingRemove = parseFloat(style.paddingBottom) + parseFloat(style.paddingTop);
+            input.style.height = "5px";
+            input.style.height = `${input.scrollHeight - paddingRemove}px`;
+          }
+        },
+        send() {
+          if (this.message !== "") {
+            const newMessage = {
+              id: Date.now(),
+              args: ['You', this.message],
+              template: '^5<b>{0}</b>: {1}',
+              multiline: false
+            };
+            this.messages.push(newMessage);
+            this.message = "";
+            this.$nextTick(() => {
+              const messagesObj = this.$refs.messages;
+              messagesObj.scrollTop = messagesObj.scrollHeight;
+            });
+          }
+        }
+      },
+      mounted() {
+        this.$nextTick(() => {
+          const messagesObj = this.$refs.messages;
+          if (messagesObj) {
+            messagesObj.scrollTop = messagesObj.scrollHeight;
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

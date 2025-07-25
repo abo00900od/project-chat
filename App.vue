@@ -26,6 +26,7 @@
                     autofocus
                     spellcheck="false"
                     rows="1"
+                    :placeholder="getPlaceholderText()"
                     @keyup.esc="hideInput"
                     @keyup="keyUp"
                     @keydown="keyDown"

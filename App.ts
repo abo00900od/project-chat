@@ -158,7 +158,7 @@ export default Vue.extend({
 
     modePrefix(): string {
       if (this.modes.length === 2) {
-        return `➤`;
+        return `💬`;
       }
 
       return this.modes[this.modeIdxGet].displayName;
@@ -462,6 +462,10 @@ export default Vue.extend({
       } else {
         this.showWindow = false;
       }
+    },
+    getPlaceholderText(): string {
+      // Support both Arabic and English placeholder text
+      return "اكتب رسالتك هنا... | Type your message here...";
     }
   }
 });

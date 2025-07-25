@@ -1,7 +1,11 @@
 <template>
     <div class="suggestions-wrap" v-show="currentSuggestions.length > 0">
         <ul class="suggestions">
-        <li class="suggestion" v-for="s in currentSuggestions" :key="s.name">
+        <li class="suggestion" 
+            v-for="s in currentSuggestions" 
+            :key="s.name"
+            @click="onSuggestionClick(s)"
+            @mouseenter="onSuggestionHover(s)">
             <p>
             <span :class="{ 'disabled': s.disabled }">
                 {{s.name}}

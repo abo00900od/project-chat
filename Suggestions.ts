@@ -59,5 +59,14 @@ export default Vue.component('suggestions', {
       return currentSuggestions;
     },
   },
-  methods: {},
+  methods: {
+    onSuggestionClick(suggestion: Suggestion) {
+      // Emit event to parent component for handling suggestion selection
+      this.$emit('suggestion-selected', suggestion);
+    },
+    onSuggestionHover(suggestion: Suggestion) {
+      // Add subtle hover feedback
+      console.log('Hovered:', suggestion.name);
+    }
+  },
 });
