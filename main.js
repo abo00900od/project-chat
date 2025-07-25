@@ -9,8 +9,17 @@ document.addEventListener('DOMContentLoaded', function() {
             'hidden': !showWindow
           }">
           <div class="chat-messages" ref="messages">
-            <div class="msg" v-for="msg in filteredMessages" :key="msg.id">
-              <span v-html="formatMessage(msg)"></span>
+            <div v-for="msg in filteredMessages" 
+                 :key="msg.id" 
+                 class="msg"
+                 :class="getMessageClass(msg)">
+              <div class="message-header" v-if="showMessageHeader(msg)">
+                {{getMessageSender(msg)}}
+              </div>
+              <div class="message-bubble">
+                <span v-html="formatMessage(msg)"></span>
+                <div class="message-time">{{getMessageTime(msg)}}</div>
+              </div>
             </div>
           </div>
         </div>
@@ -23,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
                       autofocus
                       spellcheck="false"
                       rows="1"
+                      placeholder="Type a message..."
                       @keyup.esc="hideInput"
                       @keyup="keyUp"
                       @keydown="keyDown"
@@ -40,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         v-for="p in s.params"
                         :class="{ 'disabled': p.disabled }"
                         :key="p.name">
-                    [{{p.name}}]
+                    {{p.name}}
                   </span>
                 </p>
                 <small class="help">
@@ -63,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
     data() {
       return {
         style: {
-          background: 'rgba(52, 73, 94, 0.7)',
+          background: 'var(--chat-bg)',
           width: '38vw',
           height: '22%',
         },
@@ -71,19 +81,56 @@ document.addEventListener('DOMContentLoaded', function() {
         showWindow: true,
         showHideState: false,
         hideState: 0,
-        backingSuggestions: [],
+        backingSuggestions: [
+          { name: '/help', help: 'Show available commands', params: [], disabled: false },
+          { name: '/clear', help: 'Clear chat history', params: [], disabled: false },
+          { name: '/status', help: 'Show current status', params: ['message'], disabled: false }
+        ],
         removedSuggestions: [],
         templates: {
-          'default': '<b>{0}</b>: {1}',
+          'default': '<strong>{0}</strong>: {1}',
           'defaultAlt': '{0}',
           'print': '<pre>{0}</pre>',
+          'system': '<em>⚙️ {0}</em>',
           'example:important': '<h1>^2{0}</h1>'
         },
         message: "",
         messages: [
-          { id: '1', args: ['System', 'Welcome to the chat!'], template: 'default' },
-          { id: '2', args: ['User', 'Hello world!'], template: 'default' },
-          { id: '3', args: ['Another User', 'This is a longer message to test how the chat handles multiple lines and longer content.'], template: 'default' }
+          { 
+            id: '1', 
+            args: ['System', 'Welcome to the modern chat interface!'], 
+            template: 'system',
+            type: 'system',
+            timestamp: Date.now() - 300000
+          },
+          { 
+            id: '2', 
+            args: ['Alice', 'Hey everyone! 👋'], 
+            template: 'default',
+            type: 'other',
+            timestamp: Date.now() - 120000
+          },
+          { 
+            id: '3', 
+            args: ['Bob', 'This new interface looks amazing! The design is so much better than before.'], 
+            template: 'default',
+            type: 'other',
+            timestamp: Date.now() - 60000
+          },
+          { 
+            id: '4', 
+            args: ['You', 'I agree! The message bubbles and colors make it much easier to follow conversations.'], 
+            template: 'default',
+            type: 'own',
+            timestamp: Date.now() - 30000
+          },
+          { 
+            id: '5', 
+            args: ['System', 'Chat interface updated successfully ✅'], 
+            template: 'system',
+            type: 'system',
+            timestamp: Date.now() - 10000
+          }
         ],
         oldMessages: [],
         oldMessagesIndex: -1,
@@ -91,8 +138,8 @@ document.addEventListener('DOMContentLoaded', function() {
         showWindowTimer: 0,
         showHideStateTimer: 0,
         modes: [
-          { name: 'all', displayName: 'All', color: '#fff' },
-          { name: '_global', displayName: 'All', color: '#fff', isGlobal: true, hidden: true }
+          { name: 'all', displayName: 'All', color: '#0084ff' },
+          { name: '_global', displayName: 'Global', color: '#42b883', isGlobal: true, hidden: true }
         ],
         modeIdx: 0,
       };
@@ -111,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
           return [];
         }
         return this.suggestions.filter((s) => {
-          return s.name.startsWith(this.message);
+          return s.name.toLowerCase().startsWith(this.message.toLowerCase());
         }).slice(0, 5);
       },
       hideAnimated() {
@@ -122,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
       },
       modePrefix() {
         if (this.modes.length === 2) {
-          return '➤';
+          return '💬';
         }
         return this.modes[this.modeIdxGet].displayName;
       },
@@ -131,20 +178,66 @@ document.addEventListener('DOMContentLoaded', function() {
       },
       hideStateString() {
         switch (this.hideState) {
-          case 1: return 'Visible';
+          case 1: return 'Always Visible';
           case 2: return 'Hidden';
-          case 0: return 'When active';
+          case 0: return 'Show When Active';
         }
       }
     },
     methods: {
+      getMessageClass(msg) {
+        return {
+          'message-own': msg.type === 'own',
+          'message-other': msg.type === 'other',
+          'message-system': msg.type === 'system',
+          'multiline': msg.multiline
+        };
+      },
+      
+      showMessageHeader(msg) {
+        return msg.type !== 'system' && msg.type !== 'own';
+      },
+      
+      getMessageSender(msg) {
+        if (msg.args && msg.args.length > 0) {
+          return msg.args[0];
+        }
+        return 'Unknown';
+      },
+      
+      getMessageTime(msg) {
+        if (msg.timestamp) {
+          const date = new Date(msg.timestamp);
+          return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        return '';
+      },
+      
       formatMessage(msg) {
         let s = msg.template ? msg.template : this.templates[msg.templateId || 'default'];
-        s = s.replace(/{(\d+)}/g, (match, number) => {
-          return msg.args[number] != undefined ? this.escape(msg.args[number]) : match;
+        
+        // For system messages, show only the message content
+        if (msg.type === 'system') {
+          s = this.templates['system'];
+          s = s.replace(/{(\d+)}/g, (match, number) => {
+            return msg.args[number] != undefined ? this.escape(msg.args[number]) : match;
+          });
+        } else {
+          // For regular messages, show only the message content (skip sender name)
+          if (msg.args && msg.args.length > 1) {
+            return this.escape(msg.args[1]); // Return just the message content
+          }
+        }
+        
+        // Format variant args
+        s = s.replace(/\{\{([a-zA-Z0-9_\-]+?)\}\}/g, (match, id) => {
+          const argEscaped = msg.params && msg.params[id] != undefined ? this.escape(msg.params[id]) : match;
+          return argEscaped;
         });
+
         return this.colorize(s);
       },
+      
       colorize(str) {
         let s = "<span>" + this.colorTrans(str) + "</span>";
         const styleDict = {
@@ -160,12 +253,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return s.replace(/<span[^>]*><\/span[^>]*>/g, '');
       },
+      
       colorTrans(str) {
         return str
           .replace(/\^([0-9])/g, (str, color) => `</span><span class="color-${color}">`)
           .replace(/\^#([0-9A-F]{3,6})/gi, (str, color) => `</span><span class="color" style="color: #${color}">`)
           .replace(/~([a-z])~/g, (str, color) => `</span><span class="gameColor-${color}">`);
       },
+      
       escape(unsafe) {
         return String(unsafe)
          .replace(/&/g, '&amp;')
@@ -174,9 +269,11 @@ document.addEventListener('DOMContentLoaded', function() {
          .replace(/"/g, '&quot;')
          .replace(/'/g, '&#039;');
       },
+      
       keyUp() {
         this.resize();
       },
+      
       keyDown(e) {
         if (e.which === 38 || e.which === 40) {
           e.preventDefault();
@@ -184,6 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         this.resize();
       },
+      
       moveOldMessageIndex(up) {
         if (up && this.oldMessages.length > this.oldMessagesIndex + 1) {
           this.oldMessagesIndex += 1;
@@ -196,29 +294,63 @@ document.addEventListener('DOMContentLoaded', function() {
           this.message = "";
         }
       },
+      
       resize() {
         const input = this.$refs.input;
         if (input) {
           const style = getComputedStyle(input);
           const paddingRemove = parseFloat(style.paddingBottom) + parseFloat(style.paddingTop);
-          input.style.height = "5px";
-          input.style.height = `${input.scrollHeight - paddingRemove}px`;
+          input.style.height = "auto";
+          input.style.height = `${Math.min(input.scrollHeight, 120)}px`;
         }
       },
+      
       send() {
         if (this.message !== "") {
-          this.messages.push({
+          const newMessage = {
             id: Date.now().toString(),
             args: ['You', this.message],
-            template: 'default'
-          });
+            template: 'default',
+            type: 'own',
+            timestamp: Date.now()
+          };
+          this.messages.push(newMessage);
           this.oldMessages.unshift(this.message);
           this.oldMessagesIndex = -1;
-          this.hideInput();
-        } else {
-          this.hideInput(true);
+          
+          // Simulate a response for demo purposes
+          setTimeout(() => {
+            const responses = [
+              'That\'s interesting!',
+              'I see what you mean 🤔',
+              'Thanks for sharing!',
+              'Good point! 👍',
+              'Let me think about that...'
+            ];
+            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+            this.messages.push({
+              id: (Date.now() + 1).toString(),
+              args: ['Assistant', randomResponse],
+              template: 'default',
+              type: 'other',
+              timestamp: Date.now()
+            });
+          }, 1000 + Math.random() * 2000);
+          
+          this.message = "";
+          this.$nextTick(() => {
+            this.scrollToBottom();
+          });
         }
       },
+      
+      scrollToBottom() {
+        const messagesContainer = this.$refs.messages;
+        if (messagesContainer) {
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+      },
+      
       hideInput(canceled = false) {
         setTimeout(() => {
           const input = this.$refs.input;
@@ -230,11 +362,25 @@ document.addEventListener('DOMContentLoaded', function() {
         this.showInput = false;
       }
     },
+    
+    watch: {
+      messages() {
+        this.$nextTick(() => {
+          this.scrollToBottom();
+        });
+      }
+    },
+    
     mounted() {
+      // Auto-scroll to bottom on mount
+      this.$nextTick(() => {
+        this.scrollToBottom();
+      });
+      
       // Simulate some activity for demo
       setTimeout(() => {
         this.showInput = true;
-      }, 1000);
+      }, 500);
     }
   });
 });
